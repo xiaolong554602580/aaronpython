@@ -1,0 +1,6 @@
+baidu-aip
+numpy
+pandas
+opencv-python
+pillow
+matplotlib
