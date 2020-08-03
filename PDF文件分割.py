@@ -1,4 +1,4 @@
-#文本形式打開文件
+#PDF文件小工具（分割、合并）
 
 from PyPDF2 import PdfFileReader,PdfFileWriter
 import os
@@ -44,6 +44,11 @@ class PDFSplitTool():
 				#print(getFile)
 				self.splitPDF(getFile)
 				print('{}已经完成分割'.format(name))
+
+
+class PDFMergerTool():
+	def __init__(self,PDFPath):
+		self.PDFPath = PDFPath
 
 
 
