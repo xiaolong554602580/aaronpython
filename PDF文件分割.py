@@ -1,4 +1,4 @@
-#文本形式打開文件
+#PDF文件小工具
 
 from PyPDF2 import PdfFileReader,PdfFileWriter
 import os
