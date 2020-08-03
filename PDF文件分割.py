@@ -5,6 +5,9 @@ import os
 
 
 class PDFSplitTool():
+	'''
+	这是PDF文件分割的代码
+	'''
 	def __init__(self,PDFPath):
 		self.PDFPath = PDFPath
 		self.judgmentPath()
@@ -12,6 +15,9 @@ class PDFSplitTool():
 		
 
 	def judgmentPath(self):
+		'''
+		判断路径是目录还是单个，如果路径是目录，就遍历分割全部PDF文件，如果是路径是文件，则分割单个文件 		
+		'''
 		if os.path.isdir(self.PDFPath):
 			print('This is dir')
 			self.judgDir()
@@ -22,6 +28,10 @@ class PDFSplitTool():
 			print('Nothing')
 			
 	def splitPDF(self,PDFPath):
+
+		'''
+		分割文件的主代码
+		'''
 		filePath,tempfilename = os.path.split(PDFPath)
 		PDFReader = PdfFileReader(PDFPath)
 		i = 0
@@ -36,6 +46,9 @@ class PDFSplitTool():
 			PDFWriter.write(open(os.path.join(outdir,tempfilename[:-3]+'P{}.pdf').format(page+1),'wb'))
 
 	def judgDir(self):
+		'''
+		判断路径类型后，遍历并分割全部PDF文件
+		'''
 		listfilename = os.listdir(self.PDFPath)
 		#print(listfilename)
 		for name in listfilename:	
