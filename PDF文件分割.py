@@ -4,9 +4,10 @@ from PyPDF2 import PdfFileReader,PdfFileWriter
 import os
 
 
-class PDFTool():
+class PDFSplitTool():
 	def __init__(self,PDFPath):
 		self.PDFPath = PDFPath
+		self.judgmentPath()
 
 		
 
@@ -26,10 +27,10 @@ class PDFTool():
 		i = 0
 		for page in range(i,PDFReader.getNumPages()):
 			PDFWriter = PdfFileWriter()#循环创建空白的pdf
-			print(page)
+			#print(page)
 			PDFWriter.addPage(PDFReader.getPage(page))#空白页增加PDF
 			outdir = os.path.join(filePath,"分割文件")
-			print(outdir)
+			#print(outdir)
 			if not os.path.exists(outdir):
 				os.mkdir(outdir)
 			PDFWriter.write(open(os.path.join(outdir,tempfilename[:-3]+'P{}.pdf').format(page+1),'wb'))
@@ -40,13 +41,13 @@ class PDFTool():
 		for name in listfilename:	
 			if name[-4:] == '.pdf':
 				getFile = os.path.join(self.PDFPath,name)
-				print(getFile)
+				#print(getFile)
 				self.splitPDF(getFile)
 				print('{}已经完成分割'.format(name))
 
 
+
 if __name__ == "__main__":
-	p = PDFTool(r'C:\Users\55460\Desktop\files')
-	p.judgmentPath()
+	PDFSplitTool(r'C:\Users\55460\Desktop\files')
 	
 
