@@ -47,6 +47,7 @@ class PDFSplitTool():
 
 
 
+
 if __name__ == "__main__":
 	PDFSplitTool(r'C:\Users\55460\Desktop\files')
 	
