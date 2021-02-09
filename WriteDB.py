@@ -1,81 +1,33 @@
-# coding:utf-8
+#-*-coding:utf-8-*-
 '''
-一個獲取佰騰專利網的JSON文件，並寫入sqlite數據庫保存的腳本。
-'''
+Json文件-->sqlite數據庫-->篩選後導出Excel
 
-import sqlite3
+2020.2.9:
+完善數據導入及導出
+
+下一步計劃：
+1.加入導出數據的字體由簡轉繁；
+2.專利類別導出時轉為中文定義
+'''
+import openpyxl
 import json,os,time
+import sqlite3
+#import zhtools
 
 
-class PatentsWrite(object):
-	"""docstring for PatentsWrite"""
-	def __init__(self,filesPath,databasePath,dataTable):
-		super(PatentsWrite, self).__init__()
-		self.filesPath = filesPath
-		self.databasePath = databasePath
-		self.dataTable = dataTable
-		self.Patcount = 0
-		self.main()
-
-#-------------------------------------------------------------
-
-	def main(self):
-		#得到JSON文件目錄
-		#打開單個文件讀取
-		#獲取JSON文件的專利
-		#整理出每條專利
-		#寫入數據庫
-		jsonFileDir = self.JsonFileDir(self.filesPath)
-		filecount = len(jsonFileDir)
-		for fileName in jsonFileDir:
-			self.openJsonFile(fileName)
-			filecount-=1
-			print('還有{}個文件。'.format(filecount))
-		print('完成了{}條專利'.format(self.Patcount))
-
-
-#-------------------------------------------------------------
-	#得到JSON文件目錄
-	def JsonFileDir(self,filesPath):
-		JsonFiles = []
-		Files = os.listdir(filesPath)
-		for JsonFile in Files:
-			if os.path.splitext(JsonFile)[1] == ".json":
-				JsonFiles.append(filesPath + "/" + JsonFile)
-				print("獲取了{}文件；".format(JsonFile))
-		print("總共得到了{}個文件。".format(len(JsonFiles)))
-		time.sleep(3)
-		return JsonFiles
-#------------------------------------------------------------------
-	#打開單個文件讀取
-	def openJsonFile(self,fileName):
-		panTypes = ['id','pn','ti','an','pd','ad','pa','in','ls1','ab','apn','apd','ic2','ic1','pr','aa','agc','agt','cty',\
-				'ls1_2','ls2_1','cpa','type','lsnt','lsn2','lsn1','lset','lse','ain','co','ac']
-		try:
-			f = open(fileName,"r",encoding="utf-8-sig")
-			jsonData = json.load(f)
-		except:
-			print("文件格式錯誤")
-			pass
-		else:
-			jsonDatas = jsonData['cubePatentSearchResponse']['documents']
-			print(len(jsonDatas))
-			i = 0
-			while i < len(jsonDatas):
-				jsonData = jsonDatas[i]['field_values']
-				for j in range(0,len(panTypes)):
-					jsonData.setdefault(panTypes[j])
-				#print(jsonData)
-				self.DBconnect(jsonData)
-				i+=1
-			f.close()
-
-#---------------------------------------------------------------------------
-	#專利寫入數據庫
-	def DBconnect(self,*jsonDatas):
-		conn = sqlite3.connect(databasePath)
-		c = conn.cursor()
-		for jsonData in jsonDatas:
+def IsExistenceDatabase(*BaitenData):
+	'''當前路徑標準數據庫的建立'''
+	conn = sqlite3.connect('Patents.db')
+	c = conn.cursor()
+	'''標準寫法，如果是已存在的表則不會創建，integer為	整形，text為字符型，not null為標識，意思非空即必須
+	有值。unique為唯一不可重複。primary key主鍵'''
+	c.execute('''CREATE TABLE IF NOT EXISTS PATENTS(
+		id INT,pn TEXT,ti TEXT,an TEXT,pd TEXT,ad TEXT,pa TEXT,in1 TEXT,ls1 TEXT,\
+		ab TEXT,apn TEXT,apd TEXT,ic2 TEXT,ic1 TEXT,pr TEXT,aa TEXT,agc TEXT,agt TEXT,\
+		cty TEXT,ls1_2 TEXT,ls2_1 TEXT,cpa TEXT,type TEXT,lsnt TEXT,lsn2 TEXT,lsn1 TEXT,\
+		lset TEXT,lse TEXT,ain TEXT,co TEXT,ac TEXT,PRIMARY KEY(id));''')
+	#寫入數據庫
+	for jsonData in BaitenData:
 			id = jsonData['id']
 			pn = jsonData['pn']
 			ti = jsonData['ti']
@@ -107,20 +59,82 @@ class PatentsWrite(object):
 			ain = jsonData['ain']
 			co = jsonData['co']
 			ac = jsonData['ac']
-			updatetime = time.strftime("%Y%m%d",time.localtime())
-			#id,pn,ti,an,pd,ad,pa,in,ls1,ab,apn,apd,ic2,ic1,pr,aa,agc,agt,cty,ls1_2,ls2_1,cpa,type,lsnt,lsn2,lsn1,lset,lse,ain,co,ac,
-			sqlText = (str(id),str(pn),str(ti),str(an),str(pd),str(ad),str(pa),str(in1),str(ls1),str(ab),str(apn),str(apd),str(ic2),str(ic1),\
+	sqlText = (str(id),str(pn),str(ti),str(an),str(pd),str(ad),str(pa),str(in1),str(ls1),str(ab),str(apn),str(apd),str(ic2),str(ic1),\
 				str(pr),str(aa),str(agc),str(agt),str(cty),str(ls1_2),str(ls2_1),str(cpa),str(type),str(lsnt),str(lsn2),str(lsn1),str(lset),\
-				str(lse),str(ain),str(co),str(ac),updatetime)
-			#INSERT OR IGNORE/REPLACE
-			c.execute("INSERT OR IGNORE INTO patents VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",sqlText)
-			print("專利申請號：{}，寫入成功；".format(id))
-			self.Patcount += 1
-			conn.commit()
-		conn.close()
+				str(lse),str(ain),str(co),str(ac))
+	#INSERT OR IGNORE/REPLACE
+	c.execute("INSERT OR REPLACE INTO PATENTS VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",sqlText)
+	conn.commit()
+	conn.close()
 
-if __name__ == '__main__':
-	filesPath = "C:/Users/55460/Desktop/20200425json"
-	databasePath = "C:/Users/55460/Desktop/script/data.sqlite"
-	dataTable = "patents"
-	PatentsWrite(filesPath,databasePath,dataTable)
+def openJsonFile(fileName):
+	'''Json文件處理'''
+	panTypes = ['id','pn','ti','an','pd','ad','pa','in','ls1','ab','apn','apd','ic2','ic1','pr','aa','agc','agt','cty',\
+			'ls1_2','ls2_1','cpa','type','lsnt','lsn2','lsn1','lset','lse','ain','co','ac']
+	try:
+		f = open(fileName,"r",encoding="utf-8-sig")
+		jsonData = json.load(f)
+	except:
+		print("文件格式錯誤")
+		pass
+	else:
+		jsonDatas = jsonData['cubePatentSearchResponse']['documents']
+		print("該文件讀取到{}條信息".format(len(jsonDatas)))
+		i = 0 
+		while i < len(jsonDatas):
+			jsonData = jsonDatas[i]['field_values']
+			for j in range(0,len(panTypes)):
+				jsonData.setdefault(panTypes[j]) 
+			#print(jsonData)
+			IsExistenceDatabase(jsonData)
+			i+=1
+		f.close()
+		print("寫入成功")
+
+def JsonFileDir(filesPath):
+	'''得到JSON文件目錄'''
+	JsonFiles = []
+	Files = os.listdir(filesPath)
+	for JsonFile in Files:
+		if os.path.splitext(JsonFile)[1] == ".json":
+			JsonFiles.append(filesPath + "/" + JsonFile)
+			print("獲取了{}文件；".format(JsonFile))
+	print("總共得到了{}個文件。".format(len(JsonFiles)))
+	time.sleep(3)
+	return JsonFiles		
+
+def main():
+	'''批量寫入文件到數據庫'''
+	jsonFileDir = JsonFileDir(r"d:\aaronmo\Desktop\日常使用\1-我的學習\PythonScript")#此處填寫Json文件夾的路徑
+	filecount = len(jsonFileDir)
+	for fileName in jsonFileDir:
+		openJsonFile(fileName)
+		filecount-=1
+		print('還有{}個文件。'.format(filecount))
+
+def ExportDataToExcel():
+	conn = sqlite3.connect('Patents.db')
+	c = conn.cursor()
+	c.execute('''SELECT type,ti,ab,pn,pd,pa,lsnt FROM PATENTS''')
+	patents = c.fetchall()
+	wb = openpyxl.Workbook()
+	ws = wb.active
+	headers = ['專利類型','專利名稱','文摘','公開號','公開日','權利人','主法狀']
+	#ws['A1']=headers[0]
+	ws.append(headers)
+	i = 2
+	for patent in patents:
+		ws.cell(row=i,column=1,value=str(patent[0]))
+		ws.cell(row=i,column=2,value=str(patent[1]))
+		ws.cell(row=i,column=3,value=str(patent[2]))
+		ws.cell(row=i,column=4,value=str(patent[3]))
+		ws.cell(row=i,column=5,value=str(patent[4]))
+		ws.cell(row=i,column=6,value=str(patent[5]))
+		ws.cell(row=i,column=7,value=str(patent[6]))
+
+		print(i)
+		i += 1
+	wb.save('PATENTS.xlsx')
+
+#main()
+ExportDataToExcel()
