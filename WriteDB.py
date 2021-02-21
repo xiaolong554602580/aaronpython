@@ -1,10 +1,8 @@
 #-*-coding:utf-8-*-
 '''
 Json文件-->sqlite數據庫-->篩選後導出Excel
-
 2020.2.9:
 完善數據導入及導出
-
 下一步計劃：
 1.加入導出數據的字體由簡轉繁；
 2.專利類別導出時轉為中文定義
@@ -103,16 +101,16 @@ def JsonFileDir(filesPath):
 	time.sleep(3)
 	return JsonFiles		
 
-def main():
+def main(filePath):
 	'''批量寫入文件到數據庫'''
-	jsonFileDir = JsonFileDir(r"d:\aaronmo\Desktop\日常使用\1-我的學習\PythonScript")#此處填寫Json文件夾的路徑
+	jsonFileDir = JsonFileDir(filePath)
 	filecount = len(jsonFileDir)
 	for fileName in jsonFileDir:
 		openJsonFile(fileName)
 		filecount-=1
 		print('還有{}個文件。'.format(filecount))
 
-def ExportDataToExcel():
+def ExportDataToExcel(filePath):
 	conn = sqlite3.connect('Patents.db')
 	c = conn.cursor()
 	c.execute('''SELECT type,ti,ab,pn,pd,pa,lsnt FROM PATENTS''')
@@ -134,7 +132,8 @@ def ExportDataToExcel():
 
 		print(i)
 		i += 1
-	wb.save('PATENTS.xlsx')
+	wb.save(filePath+'\PATENTS.xlsx')
 
-#main()
-ExportDataToExcel()
+filePath = r'C:\Users\Administrator\Desktop\新建文件夹 (2)'#此處填寫Json文件夾的路徑
+main(filePath)
+ExportDataToExcel(filePath)
