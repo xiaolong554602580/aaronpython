@@ -7,13 +7,17 @@ Json文件-->sqlite數據庫-->篩選後導出Excel
 2.加入導出數據的字體由簡轉繁
 3.專利類別導出時轉為中文定義
 
-下一步計劃：
 
 '''
 import openpyxl
 import json,os,time
 import sqlite3
 from zhtools import langconv
+
+
+#初始化数据
+
+filePath = r'd:\aaronmo\Desktop\MyTools\PythonScript\jsonfile'#自定义读取和存取的文件夹
 
 
 def IsExistenceDatabase(*BaitenData):
@@ -162,7 +166,7 @@ def export_data_to_excel():
 		i += 1
 	wb.save(file_path+'/PATENTS.xlsx')
 
-file_path = r'd:\aaronmo\Desktop\MyTools\PythonScript\jsonfile'#文件導入與導出路徑，使用前修改
+#文件導入與導出路徑，使用前修改
 print("開始寫入數據庫")
 main()
 print("導出數據Excel")
